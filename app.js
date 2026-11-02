@@ -1,0 +1,20 @@
+const $=s=>document.querySelector(s);
+const params=new URLSearchParams(location.search);
+const cat=categories.find(c=>c.slug===params.get('category'));
+const isAdditional=c=>c.title.includes('(Additional)');
+if($('#grid')){
+ function draw(){const grid=$('#grid');grid.innerHTML='';categories.forEach(c=>{const a=document.createElement('a');a.className='category-card';a.href=`category.html?category=${c.slug}`;a.innerHTML=`<div class="card-title">${c.title.replace(' (Additional)','')}</div><p>${c.programs.length} programs${isAdditional(c)?' · Additional':''}</p>`;grid.appendChild(a)})}
+ draw();
+}
+if($('#program-list')){if(cat){$('#heading').textContent=cat.title.replace(' (Additional)','');$('#crumb').textContent=cat.title.replace(' (Additional)','');$('#subheading').textContent=`${cat.programs.length} questions`;$('#search').placeholder='Search questions...';
+function draw(q=''){const list=$('#program-list');list.innerHTML='';cat.programs.filter(p=>p.title.toLowerCase().includes(q.toLowerCase())).forEach(p=>{const card=document.createElement('section');card.className='topic-program';const heading=document.createElement('div');heading.className='topic-program-heading';heading.innerHTML=`<span class="number">Q${p.id}</span><b>${p.title}</b>`;card.appendChild(heading);if(p.code){const codeHead=document.createElement('div');codeHead.className='topic-code-heading';codeHead.innerHTML=`<span>${p.file}</span><button class="copy-btn" type="button">Copy Code</button>`;card.appendChild(codeHead);const pre=document.createElement('pre');const code=document.createElement('code');code.textContent=p.code;pre.appendChild(code);card.appendChild(pre);const outTitle=document.createElement('h4');outTitle.textContent='Output';card.appendChild(outTitle);const out=document.createElement('pre');out.className='output';out.textContent=p.output||'Output depends on the input.';card.appendChild(out);codeHead.querySelector('button').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(p.code)}catch(err){const t=document.createElement('textarea');t.value=p.code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy Code',1000)});}list.appendChild(card)})}
+draw();$('#search').addEventListener('input',e=>draw(e.target.value))}else $('#heading').textContent='Category not found'}
+if($('#code')){const pcat=categories.find(c=>c.slug===params.get('category'));const p=pcat&&pcat.programs.find(x=>x.id===Number(params.get('id')));if(p){document.title=p.title;$('#title').textContent=p.title;$('#pill').textContent=`Q${p.id} · ${pcat.slug}`;$('#filename').textContent=`Java Source Code · ${p.file}`;
+if(p.code){$('#code').textContent=p.code;$('#output').textContent=p.output||'Output depends on the input.';$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(p.code)}catch(e){const t=document.createElement('textarea');t.value=p.code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}$('#copy').textContent='Copied!';setTimeout(()=>$('#copy').textContent='Copy Code',1200)})}
+else{$('.code-card').style.display='none';document.querySelector('main.catalogue > .muted').style.display='none'}
+$('#breadcrumb').innerHTML=`<a href="index.html">Home</a> › <a href="programs.html">Topics</a> › ${pcat.title.replace(' (Additional)','')} › Q${p.id}`;
+const idx=pcat.programs.findIndex(x=>x.id===p.id);const nav=document.createElement('div');nav.className='program-navigation';
+if(idx>0){const prev=document.createElement('a');prev.className='back-link';prev.textContent='← Previous';prev.href=`program.html?category=${pcat.slug}&id=${pcat.programs[idx-1].id}`;nav.appendChild(prev)}
+if(idx<pcat.programs.length-1){const next=document.createElement('a');next.className='back-link next-link';next.textContent='Next →';next.href=`program.html?category=${pcat.slug}&id=${pcat.programs[idx+1].id}`;nav.appendChild(next)}
+$('#back').replaceWith(nav);
+}else $('#title').textContent='Program not found'}
